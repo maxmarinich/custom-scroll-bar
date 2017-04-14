@@ -1,20 +1,24 @@
+import { setStyle } from './common';
+
 
 export class ScrollBar {
     constructor(scrollBar, scrollingContent) {
         this._scr = scrollingContent;
         this.scrollBar = scrollBar;
-
         this._resetAll();
+        window.addEventListener('resize', this._resetAll.bind(this), false);
+        this._scr.view().addEventListener('wheel', this._onWheel.bind(this), false );
     }
 
     _resetAll () {
+
         //this.scrollBar = document.querySelector(this.scrollBar); // Scrollbar-Container // parent
         this._track = document.querySelector('.scrollbar-track');
-        this._handle = document.querySelector('.scrollbar-handle');
+        this._handle = document.querySelector('.scrollbar-thumb');
 
         const arrowsHeight = 0; // * 2
         const viewportHeight = this._scr.viewableHeight();
-        const contentHeight = this._scr.getContentHeight();
+        const contentHeight = this._scr.areaHeight();
         const viewableRatio = viewportHeight / contentHeight;
 
         const thumbHeight = Math.round((viewportHeight - arrowsHeight * 2) * viewableRatio);
@@ -26,8 +30,29 @@ export class ScrollBar {
         this._coords(0, 0);
 
         this._handle.style.height = thumbHeight + 'px';
-        this._scr.scrollElement().addEventListener('wheel', this._onWheel.bind(this) )
+        const scrollContent = this._scr.areaHeight();
+        const scrollbarView = this._scr.viewableHeight();
 
+        if (scrollbarView >= scrollContent) {
+            this._track.style.display = 'none';
+            return;
+        }
+        this._track.style.display = '';
+
+
+    }
+
+    _showHideScrollBall() {
+
+        const scrollContent = this._scr.areaHeight();
+        const scrollbarView = this._scr.viewableHeight();
+
+        if (scrollbarView >= scrollContent) {
+            this._track.style.display = 'none';
+            return;
+        }
+        this._track.style.display = '';
+        this._scr.scrollContent().addEventListener('wheel', this._onWheel.bind(this) );
     }
 
 
@@ -39,16 +64,14 @@ export class ScrollBar {
     }
 
     _onWheel (e) {
+
+        // TODO check if vh >= ch
         e = e || window.event;
 
         const speedRatio = 1;
         const deltaY = e.deltaY || e.detail || e.wheelDelta;
 
-
-        // this._scrollY(this._coords().y + deltaY / this._ratio());
-
-        this._scrollY((-this._scr.coords().y + deltaY / speedRatio ) / this._ratio());
-
+        this._scrollY((-this._scr.areaCoords().y + deltaY / speedRatio ) / this._ratio());
         e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
 
@@ -61,24 +84,19 @@ export class ScrollBar {
         if (delta < 0) y = 0;
 
         this._coords(0, y);
-        //this._handle.style.cssText = 0;
+        this._scr.scrollTo(0, -Math.round(y * this._ratio()));
 
-        Object.assign(this._handle.style,{transition: `all .3s`, transform: `translate(0, ${y}px`});
-
-        this._scr.setElementPosition(0, -Math.round(y * this._ratio()));         // move content
-
+        setStyle(this._handle, {
+            transition: `all .3s`,
+            transform: `translate(0, ${y}px`
+        });
     }
-
-
 
     _coords (x, y) {
         if (!this.coords) this.coords = {};
-
         if (!arguments.length) return this.coords;
 
         this.coords.x = x;
         this.coords.y = y;
     };
-
-    //_getOffsetTop (node) { return node.offsetTop; }
 }

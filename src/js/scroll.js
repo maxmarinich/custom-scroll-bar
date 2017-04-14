@@ -1,38 +1,23 @@
+import setStyle from './common';
+
 
 export class ScrollView {
-    constructor(selector,
-                elemWidth,
-                elemHeight) {
-        this.selector = selector;
-        this.elemWidth = elemWidth;
-        this.elemHeight = elemHeight;
-
-        this.resetAll();
-        this.stopScroll();
-        this.setParentStyle(
-            'position: absolute; overflow: hidden; width: 100%; height: 100%');
+    constructor(props) {
+        this.props = props;
+        this.scrollView = this.view();
+        this.scrollArea = this.area();
     }
 
-    scrollElement () {
-        return document.querySelector(this.selector);
-    }
+    view () {
+        return document.querySelector(this.props.view); }
 
-    getContentHeight() {
-        return this.scrollElement().getBoundingClientRect().height;
-    }
+    area () {
+        return this.scrollView.children[0]; }
 
-    setParentStyle (cssString) {
-        const element = this.scrollElement();
-        const parent = element.closest('.scrollbar-view');
+    areaHeight() {
+        return this.scrollArea.getBoundingClientRect().height; }
 
-        if (!arguments.length) { parent.style.cssText = ''; }
-
-        parent.style.cssText = cssString;
-        return this;
-    }
-
-    setElementPosition (x, y) {
-        const element = this.scrollElement();
+    scrollTo (x, y) {
 
         if (x < this.viewableWidth() - this.totalWidth()) {
             x = this.viewableWidth() - this.totalWidth();
@@ -44,46 +29,40 @@ export class ScrollView {
         }
         if (y > 0) { y = 0; }
 
-        this.coords(x, y);
+        this.areaCoords(x, y);
 
-        element.style.cssText =
-            `transition: all .3s; transform: translate(${this.coords().x}px, ${this.coords().y}px)`;
+        Object.assign(this.scrollArea.style, {
+            transition: 'all .3s',
+            transform: `translate(${x}px, ${y}px`
+        });
     };
 
-
-    viewableHeight (height) {
-        this._viewableHeight = this.elemHeight
-            || this.scrollElement().closest('.scrollbar-view').getBoundingClientRect().height;
-
-        if (!arguments.length) return this._viewableHeight;
-        this._viewableHeight = height;
+    viewableHeight () {
+        return this.props.height
+            || this.scrollView.getBoundingClientRect().height;
     };
 
-    viewableWidth (width) {
-
-        this._viewableWidth = this.elemWidth
-            || this.scrollElement().closest('.scrollbar-view').getBoundingClientRect().width;
-
-        if (!arguments.length) return this._viewableWidth;
-        this._viewableWidth = width;
+    viewableWidth () {
+        return this.props.width
+            || this.scrollView.getBoundingClientRect().width;
     };
 
     totalWidth (el) {
-        this._totalWidth = this.scrollElement().offsetWidth;
+        this._totalWidth = this.scrollArea.offsetWidth;
 
         if (!arguments.length) return this._totalWidth;
         this._totalWidth = el.offsetWidth;
     };
 
     totalHeight (el) {
-        this._totalHeight = this.scrollElement().offsetHeight;
+        this._totalHeight = this.scrollArea.offsetHeight;
 
         if (!arguments.length) return this._totalHeight;
         this._totalHeight = el.offsetHeight;
     };
 
-    coords (x, y) {
-        if (!this._coords) this._coords = {};
+    areaCoords (x, y) {
+        if (!this._coords) this._coords = {x: null , y: null};
 
         if (!arguments.length) return this._coords;
         this._coords.x = x;
@@ -91,22 +70,14 @@ export class ScrollView {
     };
 
     scrollBy (x, y) {
-        const _x = this.coords().x + x;
-        const _y = this.coords().y + y;
+        const _x = this.areaCoords().x + x;
+        const _y = this.areaCoords().y + y;
 
         this.stopScroll();
         this.scrollTimer = window.setInterval(
-            () =>  this.setElementPosition(_x, _y), 40);
+            () =>  this.scrollTo(_x, _y), 40);
     };
-
-    scrollTo (x, y) {
-        console.log('from scroll: ', this.coords().y, y);
-        const _x = this.coords().x + x;
-        const _y = this.coords().y + y;
-
-        this.setElementPosition(-_x, -_y);
-    };
-
+    
     stopScroll () {
         if (this.scrollTimer) {
             window.clearInterval(this.scrollTimer);
@@ -114,14 +85,19 @@ export class ScrollView {
     };
 
     resetAll () {
-        const element = this.scrollElement();
-
-        element.style.cssText = '';
-        this.totalHeight(this.scrollElement());
-        this.totalWidth(this.scrollElement());
+        this.scrollArea.style.cssText = '';
+        this.totalHeight(this.scrollArea);
+        this.totalWidth(this.scrollArea);
         this.viewableHeight();
         this.viewableWidth();
-        this.coords(0, 0);
+        this.areaCoords(0, 0);
     };
 
+    init () {
+        this.resetAll();
+        this.scrollView.style.cssText =
+            'position: absolute; overflow: hidden; width: 100%; height: 100%';
+
+        return this;
+    }
 }

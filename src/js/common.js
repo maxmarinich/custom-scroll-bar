@@ -6,3 +6,7 @@ export function setTransformAnimation(element, position, durationMs) {
         element.style[value + 'Transition'] = `transform ${durationMs}ms ease-out`;
     }
 }
+
+export function setStyle(node, css) {
+    Object.assign(node.style, css);
+}
