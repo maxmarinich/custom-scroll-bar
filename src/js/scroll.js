@@ -1,9 +1,5 @@
-/*
-*
- */
 
-
-export class Scroll {
+export class ScrollView {
     constructor(selector,
                 elemWidth,
                 elemHeight) {
@@ -21,9 +17,13 @@ export class Scroll {
         return document.querySelector(this.selector);
     }
 
+    getContentHeight() {
+        return this.scrollElement().getBoundingClientRect().height;
+    }
+
     setParentStyle (cssString) {
         const element = this.scrollElement();
-        const parent = element.closest('#scroller');
+        const parent = element.closest('.scrollbar-view');
 
         if (!arguments.length) { parent.style.cssText = ''; }
 
@@ -47,13 +47,13 @@ export class Scroll {
         this.coords(x, y);
 
         element.style.cssText =
-            `transform: translate(${this.coords().x}px, ${this.coords().y}px)`;
+            `transition: all .3s; transform: translate(${this.coords().x}px, ${this.coords().y}px)`;
     };
 
 
     viewableHeight (height) {
         this._viewableHeight = this.elemHeight
-            || this.scrollElement().closest('#scroller').getBoundingClientRect().height;
+            || this.scrollElement().closest('.scrollbar-view').getBoundingClientRect().height;
 
         if (!arguments.length) return this._viewableHeight;
         this._viewableHeight = height;
@@ -62,7 +62,7 @@ export class Scroll {
     viewableWidth (width) {
 
         this._viewableWidth = this.elemWidth
-            || this.scrollElement().closest('#scroller').getBoundingClientRect().width;
+            || this.scrollElement().closest('.scrollbar-view').getBoundingClientRect().width;
 
         if (!arguments.length) return this._viewableWidth;
         this._viewableWidth = width;

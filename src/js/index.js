@@ -1,8 +1,8 @@
-import { Scroll } from './scroll';
+import { ScrollView } from './scroll';
 import { ScrollBar } from './scrollBar';
 
 
-const scroll  = new Scroll(".scroller-container", null, null);
-const scrollBarr = new ScrollBar("#scrollbar", scroll);
+const scrollView  = new ScrollView(".scrollbar-scene", null, null);
+const scrollBarr = new ScrollBar("#scrollbar", scrollView);
 //    .setParentStyle( "position: absolute; overflow: hidden; width: 100%; height: 100%");
 

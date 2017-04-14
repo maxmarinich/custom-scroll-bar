@@ -3,18 +3,29 @@ export class ScrollBar {
     constructor(scrollBar, scrollingContent) {
         this._scr = scrollingContent;
         this.scrollBar = scrollBar;
+
         this._resetAll();
     }
 
     _resetAll () {
-        this.scrollBar = document.querySelector(this.scrollBar); // Scrollbar-Container // parent
+        //this.scrollBar = document.querySelector(this.scrollBar); // Scrollbar-Container // parent
         this._track = document.querySelector('.scrollbar-track');
         this._handle = document.querySelector('.scrollbar-handle');
 
+        const arrowsHeight = 0; // * 2
+        const viewportHeight = this._scr.viewableHeight();
+        const contentHeight = this._scr.getContentHeight();
+        const viewableRatio = viewportHeight / contentHeight;
+
+        const thumbHeight = Math.round((viewportHeight - arrowsHeight * 2) * viewableRatio);
+
+
         this._trackHeight  = this._track.offsetHeight;
-        this._handleHeight = this._handle.offsetHeight;
+        this._handleHeight = thumbHeight;
 
         this._coords(0, 0);
+
+        this._handle.style.height = thumbHeight + 'px';
         this._scr.scrollElement().addEventListener('wheel', this._onWheel.bind(this) )
 
     }
@@ -30,7 +41,7 @@ export class ScrollBar {
     _onWheel (e) {
         e = e || window.event;
 
-        const speedRatio = 3;
+        const speedRatio = 1;
         const deltaY = e.deltaY || e.detail || e.wheelDelta;
 
 
@@ -50,7 +61,10 @@ export class ScrollBar {
         if (delta < 0) y = 0;
 
         this._coords(0, y);
-        this._handle.style.transform =`translateY(${y}px)`;
+        //this._handle.style.cssText = 0;
+
+        Object.assign(this._handle.style,{transition: `all .3s`, transform: `translate(0, ${y}px`});
+
         this._scr.setElementPosition(0, -Math.round(y * this._ratio()));         // move content
 
     }
