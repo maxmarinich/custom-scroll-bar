@@ -33,6 +33,7 @@
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.11.1",
     "babelify": "^7.3.0",
+    "browser-sync": "^2.18.8",
     "browserify": "^13.1.0",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",

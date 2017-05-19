@@ -9,8 +9,9 @@ var babelify = require('babelify');
 var livereload = require('gulp-livereload');
 var server = require('gulp-develop-server');
 var source = require('vinyl-source-stream');
+var browserSync = require('browser-sync').create();
 
-gulp.task('default', ['build']);
+gulp.task('default', ['build', 'watch', 'bs']);
 
 var VARS = {
     css: {
@@ -56,6 +57,7 @@ var VARS = {
 
 gulp.task('build', ['js', 'css']);
 
+
 gulp.task('js', function() {
     return VARS.js.bundle({ sourceMaps: true })
 });
@@ -83,10 +85,24 @@ gulp.task('watch', [
     'watch:css'
 ]);
 
-gulp.task('serve', ['watch'], function() {
-    server.listen({ path: './server.js' });
-    livereload.listen(35731);
+// gulp.task('serve', ['watch'], function() {
+//     server.listen({ path: './server.js' });
+//     livereload.listen(35731);
+// });
+
+gulp.task('bs', function () {
+    browserSync.init({
+        server: './static',
+        directory: true,
+        open: false,
+        notification: false,
+        reloadOnRestart: false,
+        ghostMode: true,
+        startPath: 'index.html'
+    });
+    browserSync.watch('./static/**/*.*').on('change', browserSync.reload);
 });
+
 
 function onJsBundleError() {
     var args = Array.prototype.slice.call(arguments);

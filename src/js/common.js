@@ -1,3 +1,7 @@
+export function calculateElementSize(el) {
+    return el.getBoundingClientRect();
+}
+
 export function setTransformAnimation(element, position, durationMs) {
     const prefixes = ['Webkit', 'Moz', 'ms', 'O', ''];
 

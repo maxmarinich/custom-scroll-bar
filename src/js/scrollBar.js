@@ -1,6 +1,7 @@
 import { setStyle } from './common';
 
 
+
 export class ScrollBar {
     constructor(scrollBar, scrollingContent) {
         this._scr = scrollingContent;
