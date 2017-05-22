@@ -1,26 +1,31 @@
 import { scrollView, scrollbarVertical } from './components';
-import { setStyle } from './common';
+import { setStyle, getElemHeight, getElemWidth, throttle } from './common';
 
-export default class ScrollView {
+export default class Scrollbar {
     constructor(props) {
         this.props = props;
-        this.component = props.view;
+        this.component = props.view
     }
 
     _viewableHeight () {
-        return this.props.height
-            || this.scrollView.getBoundingClientRect().height;
+        return this.props.height || getElemHeight(this.scrollView);
     };
 
     _viewableWidth () {
-        const scrollbarTrackWidth = this.scrollBarVertical.getBoundingClientRect().width;
-
-        return (this.props.width
-            || this.scrollView.getBoundingClientRect().width) - scrollbarTrackWidth;
+        return this.props.width || getElemWidth(this.scrollView);
     };
 
+    _viewWidth() {
+			  return this._viewableWidth() - getElemWidth(this.scrollBarVertical);
+    }
+
+    _viewHeight() {
+        return this._viewableHeight() - getElemHeight(this.scrollBarHorizontal);
+    }
+
     _totalWidth () {
-        return this.scrollArea.offsetWidth;
+        //return this.scrollArea.offsetWidth;
+			getElemWidth(this.scrollArea);
     };
 
     _totalHeight () {
@@ -28,7 +33,7 @@ export default class ScrollView {
     };
 
     _ratio() {
-        const contentHeight = this._totalHeight() - this._viewableHeight();
+        const contentHeight = this._totalHeight() - this._viewHeight();
         const scrollBarVerticalHeight =
             this.verticalTrack.offsetHeight - this.verticalThumb.offsetHeight;
 
@@ -45,9 +50,9 @@ export default class ScrollView {
 
     _verticalThumbHeight() {
         const arrowsHeight = 0; // *2
-        const viewableRatio = this._viewableHeight() / this._totalHeight();
+        const viewableRatio = this._viewHeight() / this._totalHeight();
 
-        return Math.round((this._viewableHeight() - arrowsHeight * 2) * viewableRatio);
+        return Math.round((this._viewHeight() - arrowsHeight * 2) * viewableRatio);
     }
 
     _isOverflow (dir) {
@@ -67,32 +72,66 @@ export default class ScrollView {
         e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
 
+    _onFocus() {
+        console.log('focused')
+    }
+
     _scrollTo(deltaX, deltaY) {
+
         let trackHeight = this.verticalTrack.offsetHeight - this.verticalThumb.offsetHeight;
 
         if (deltaY > trackHeight) deltaY = trackHeight;
         if (deltaY < 0) deltaY = 0;
 
-        this._scrollAreaCoords(0, deltaY);
+
         const scrollAriaOffset = Math.round(deltaY * this._ratio());
 
         setStyle(this.scrollArea, {
-            transform: `translate(0px, ${-scrollAriaOffset}px`
+            transform: `translate(0, ${-scrollAriaOffset}px`
         });
 
         setStyle(this.verticalThumb, {
-            transform: `translate(0px, ${deltaY}px`
+            transform: `translate(0, ${deltaY}px`
         });
+			  this._scrollAreaCoords(0, deltaY);
+
     }
 
-    _onButtonClick(e) {
-        const deltaY = this.deltaY || 53;
+    _onTouchStart(e) {
+        this.toucStartY = e.changedTouches[0].clientY;
+			  this.areaClientY = this._scrollAreaCoords().y;
 
+        e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+    }
+
+    _onTouchMove(e) {
+        const touch = e.changedTouches[0].clientY;
+        const touchDistance = touch - this.toucStartY;
+
+        if(Math.abs(touchDistance) < 5) return;
+
+        let position = parseInt((this.areaClientY + touchDistance));
+
+        this._scrollTo(0, position);
+        e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+    }
+
+    _onButtonTopClick(e) {
+        const deltaY = Math.abs(this.deltaY) || 53;
+        const positionY = this._scrollAreaCoords().y + -deltaY / this._ratio();
+
+        this._scrollTo(0, positionY);
+        e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+    }
+
+    _onButtonDownClick(e) {
+        const deltaY = Math.abs(this.deltaY) || 53;
 			  const positionY = this._scrollAreaCoords().y + deltaY / this._ratio();
 
-			  this._scrollTo(0, -positionY);
+			  this._scrollTo(0, positionY);
 			  e.preventDefault ? e.preventDefault() : (e.returnValue = false);
     }
+
     _scrollbarClick(e) {
         const { target, clientY } = e;
         const className = this.verticalTrack.className;
@@ -126,6 +165,7 @@ export default class ScrollView {
     _cancelDragging() {
       document.removeEventListener('mousemove', this._handleDrag);
       document.removeEventListener('mouseup', this._handleDragEnd);
+			document.onselectstart = () => true;
     }
 
     _handleDrag(e) {
@@ -151,6 +191,7 @@ export default class ScrollView {
         this._setupDragging();
     }
 
+
     _renderDomComponents() {
       this.component.appendChild(this.scrollView);
       this.component.appendChild(this.scrollBarVertical);
@@ -159,30 +200,38 @@ export default class ScrollView {
     _setInitialStyles() {
       this.component.style.height = this._viewableHeight() + 'px';
       this.component.style.width = this._viewableWidth() + 'px';
-      this.scrollView.style.width = this._viewableWidth() + 'px';
+      this.scrollView.style.width = this._viewWidth() + 'px';
+      this.scrollView.style.height = this._viewHeight() + 'px';
       this.verticalThumb.style.height = this._verticalThumbHeight() + 'px';
     }
 
     _addListeners() {
-        document.onselectstart = () => false;
         this.verticalThumb.ondrugstart = () => false;
+			  this._onTouchMoveThrottled = throttle(this._onTouchMove, 16);
 
-        this.component.addEventListener('wheel', this._onWheel.bind(this), false );
-        this.verticalTrack.addEventListener('mousedown', this._scrollbarClick.bind(this), false);
-        this.verticalThumb.addEventListener('mousedown', this._handleVerticalThumbMouseDown.bind(this), false);
-        this.topButton.addEventListener('click', this._onButtonClick.bind(this), false);
+        this.component.addEventListener('wheel', this._onWheel.bind(this));
+        this.component.addEventListener('focus', this._onFocus.bind(this), true);
+        this.scrollArea.addEventListener('touchstart', this._onTouchStart.bind(this));
+        this.scrollArea.addEventListener('touchmove', this._onTouchMoveThrottled.bind(this));
+        this.topButton.addEventListener('click', this._onButtonTopClick.bind(this));
+        this.bottomButton.addEventListener('click', this._onButtonDownClick.bind(this));
+        this.verticalTrack.addEventListener('mousedown', this._scrollbarClick.bind(this));
+        this.verticalThumb.addEventListener('mousedown', this._handleVerticalThumbMouseDown.bind(this));
     }
 
     resetAll () {
         this.scrollArea.style.cssText = '';
-        this._totalHeight(this.scrollArea);
-        this._totalWidth(this.scrollArea);
+        //this._totalHeight(this.scrollArea);
+        //this._totalWidth(this.scrollArea);
         this._viewableHeight();
         this._viewableWidth();
+        this._viewHeight();
+        this._viewWidth();
         this._scrollAreaCoords(0, 0);
     };
 
     init () {
+
         this.scrollView = scrollView(this.component.children[0]);
         this.scrollArea = this.scrollView.children[0];
         this.scrollBarVertical = scrollbarVertical();

@@ -29,7 +29,8 @@ html, body {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow: hidden
+    overflow: hidden;
+
 }
 
 .scroll-area {
@@ -62,7 +63,7 @@ html, body {
     top: 20px;
     width: 100%;
     height: calc(100% - 40px);
-    background: green;
+    background: #222;
 }
 
 .scrollbar-vertical__thumb {
