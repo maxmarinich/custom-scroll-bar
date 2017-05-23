@@ -43,7 +43,6 @@ export const scrollbarVertical = (disableButtons) => {
 
 export const scrollView = (scrollArea) => {
     const scrollView = document.createElement('div');
-
     scrollView.setAttribute('class', 'scroll-view');
     scrollArea.setAttribute('class', 'scroll-area');
     scrollView.appendChild(scrollArea);
