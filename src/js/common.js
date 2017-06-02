@@ -12,15 +12,14 @@ export function setStyle(node, css) {
 }
 
 export function getElemHeight(elem) {
-    return elem ? elem.getBoundingClientRect().height : 0;
+    return elem.getBoundingClientRect().height;
 }
 
 export function getElemWidth(elem) {
-	return elem ? elem.getBoundingClientRect().width : 0;
+	return elem.getBoundingClientRect().width;
 }
 
 export function throttle(func, ms = 0) {
-
 	  let savedArgs,savedThis, isThrottled = false;
 
 	  function wrapper() {
@@ -41,6 +40,5 @@ export function throttle(func, ms = 0) {
             }
         }, ms);
     }
-
 	  return wrapper;
 }
